@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="appModule">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+    <style>
+        *{font-family: "Microsoft YaHei"}
+    </style>
+</head>
+<body ng-controller="myCtrl">
+<!--
+    success 绿色
+    danger  红色
+    warning 警告
+    default 灰色
+    primary 蓝色
+    info    浅蓝
+-->
+<div class="container">
+<table class="table table-bordered text-center table-hover">
+    <caption class="h2">我的购物车</caption>
+    <tr class="text-danger">
+        <th> 全选 <input type="checkbox" ng-model="selectAll" ng-click="all()"/></th>
+        <th class="text-center">商品名称</th>
+        <th class="text-center" ng-click="price='price';flag=!flag">商品价格</th>
+        <th class="text-center">商品数量</th>
+        <th class="text-center">小计</th>
+        <th class="text-center">操作</th>
+    </tr>
+    <tr ng-repeat="product in products | orderBy:price:flag">
+        <td><input type="checkbox" ng-model="product.isSelected" ng-click="one()"/></td>
+        <td>{{product.productName}}</td>
+        <td>{{product.price}}</td>
+        <td>
+            <button ng-click="product.count=product.count-1"                                     ng-disabled="product.count==1">-</button>
+            <input type="text" ng-model="product.count" ng-readonly="true">
+            <button ng-click="product.count=product.count+1">+</button>
+        </td>
+        <td>{{product.price*product.count}}</td>
+        <td>
+            <button class="btn btn-danger" ng-click="remove(product)">删除               </button>
+        </td>
+    </tr>
+</table>
+    <tr>
+        <td colspan="6" class="text-left">
+            <!--作用域上有任何值发生变化都会刷新页面-->
+            总价：{{sum()}}
+            折后价：<select ng-model="sale">
+                <option value="{{dis.val}}" ng-repeat="dis in discounts">{{dis.content}}</option>
+            </select>
+            {{sum()*sale | currency:'RMB'}}
+        </td>
+    </tr>
+    <form>
+        <div class="form-group">
+            <label for="productName" class="control-label">商品名称</label>
+            <input type="text" id="productName" class="form-control" placeholder="请输入名称" ng-model="product.productName">
+        </div>
+        <div class="form-group">
+            <label for="productPrice" class="control-label">商品价格</label>
+            <input type="text" id="productPrice" class="form-control" placeholder="请输入价格" ng-model="product.price">
+        </div>
+        <div class="form-group">
+            <button type="reset" class="btn btn-warning pull-right" ng-click="reset()">重置</button>
+            <button type="button" class="btn btn-primary pull-right" style="margin-right: 10px;" ng-click="addProduct()">添加</button>
+        </div>
+    </form>
+</div>
+<script src="node_modules/angular/angular.js"></script>
+<script>
+    var app=angular.module("appModule",[]);
+    app.controller("myCtrl",["$scope","$rootScope",function($scope){
+        $scope.sale='0.1';
+        $scope.product={};
+        $scope.products = [
+            {productName:'电热毯',price:99,count:20,isSelected:true},
+            {productName:'热水袋',price:30,count:80,isSelected:false}];
+        //删除
+        $scope.remove=function(p){//p 代表当前点击的是那一条数据
+            //filter返回的是一个新的数组
+            $scope.products=$scope.products.filter(function(item,input){
+                return item!=p;//返回false表示不要
+            })
+        };
+        //增加
+        $scope.addProduct=function(){
+            //object.keys判断对象中有几个属性
+            //console.log(object.keys($scope.product));//
+            if(Object.keys($scope.product).length==2){
+                $scope.product.count=1;
+                $scope.products.push($scope.product);
+                $scope.product={};//清空输入框的内容
+            }
+        };
+        //重置
+            $scope.reset=function(){
+                $scope.product={};
+        };
+        //求和
+        $scope.sum=function(){
+            var total=0;
+            $scope.products.forEach(function(item){
+                total+=item.price*item.count
+            });
+            return total;
+        };
+        $scope.discounts=[{val:'0.1',content:'打一折'},
+                          {val:'0.2',content:'打二折'},
+                          {val:'0.3',content:'打三折'}
+        ];
+        //全选 全不选
+        /*
+        *
+        *
+        * */
+        $scope.all=function(){
+            $scope.products.forEach(function(item,input){
+                    item.isSelected=$scope.selectAll
+            })
+        };
+        $scope.one=function(){
+            //find 找到返回true（不会继续找）
+            var item=$scope.products.find(function(){
+                return !item.isSelected;
+            });
+            //item有内容，表示有false selectAll为false
+            $scope.selectAll=item?false:true;
+        };
+        //$scope.one();//默认先执行一次，函数执行要放在执行后面
+    }]);
+</script>
+</body>
+</html>
